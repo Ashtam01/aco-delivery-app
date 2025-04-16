@@ -1,149 +1,144 @@
 import streamlit as st
 import numpy as np
-import pandas as pd
 import folium
-from streamlit_folium import st_folium
 import random
-import math
-import matplotlib.pyplot as plt
-from io import BytesIO
-import base64
+from streamlit_folium import st_folium
+from math import radians, sin, cos, sqrt, atan2
+import os
 
-# ---------------------------- CONFIG ----------------------------
-st.set_page_config(page_title="ACO Delivery Optimizer", layout="centered")
-st.title("🚚 Ant Colony Optimization for Delivery Routes")
+st.title("🚚 ACO Delivery Route Optimizer for Indian Cities")
 
-# ---------------------------- CITY SETUP ----------------------------
-n = st.number_input("Enter number of cities:", min_value=2, max_value=20, value=5, step=1)
-city_names = []
-city_coords = []
+# Full city dictionary with lat/lon
+india_cities = {
+    'Delhi': (28.6139, 77.2090),
+    'Mumbai': (19.0760, 72.8777),
+    'Bangalore': (12.9716, 77.5946),
+    'Hyderabad': (17.3850, 78.4867),
+    'Chennai': (13.0827, 80.2707),
+    'Kolkata': (22.5726, 88.3639),
+    'Ahmedabad': (23.0225, 72.5714),
+    'Pune': (18.5204, 73.8567),
+    'Jaipur': (26.9124, 75.7873),
+    'Lucknow': (26.8467, 80.9462),
+    'Surat': (21.1702, 72.8311),
+    'Bhopal': (23.2599, 77.4126),
+    'Nagpur': (21.1458, 79.0882),
+    'Indore': (22.7196, 75.8577),
+    'Kanpur': (26.4499, 80.3319),
+    'Patna': (25.5941, 85.1376),
+    'Ranchi': (23.3441, 85.3096),
+    'Guwahati': (26.1445, 91.7362),
+    'Raipur': (21.2514, 81.6296),
+    'Thiruvananthapuram': (8.5241, 76.9366),
+    'Coimbatore': (11.0168, 76.9558),
+    'Visakhapatnam': (17.6868, 83.2185),
+    'Vadodara': (22.3072, 73.1812),
+    'Vijayawada': (16.5062, 80.6480),
+    'Agra': (27.1767, 78.0081),
+    'Varanasi': (25.3176, 82.9739),
+}
 
-st.markdown("### 📍 Enter city names (suggest real Indian cities):")
-for i in range(n):
-    city = st.text_input(f"City {i+1}", key=f"city_{i}")
-    if city:
-        city_names.append(city)
-        # Fake coordinates for demo; in practice, use geocoder or fixed dict
-        city_coords.append((random.uniform(8, 35), random.uniform(68, 90)))
+# User input: Slider to choose how many cities to optimize
+n = st.slider("How many cities to optimize (min 3):", 3, len(india_cities), 6)
 
-if len(city_coords) < n:
-    st.warning("Please enter all city names.")
-    st.stop()
+# Multiselect dropdown to choose specific cities
+selected_cities = st.multiselect("Select the cities to optimize:", list(india_cities.keys()), max_selections=n)
 
-# ---------------------------- DISTANCE MATRIX ----------------------------
-def haversine(coord1, coord2):
-    R = 6371
-    lat1, lon1 = np.radians(coord1)
-    lat2, lon2 = np.radians(coord2)
-    dlat = lat2 - lat1
-    dlon = lon2 - lon1
-    a = np.sin(dlat / 2)**2 + np.cos(lat1) * np.cos(lat2) * np.sin(dlon / 2)**2
-    return 2 * R * np.arcsin(np.sqrt(a))
+# Validate the selected cities
+if len(selected_cities) != n:
+    st.warning(f"Please select exactly {n} cities.")
+else:
+    # Generate coordinates of selected cities
+    selected = {city: india_cities[city] for city in selected_cities}
+    coords = list(selected.values())
+    city_names = list(selected.keys())
+    num_cities = len(coords)
 
-distance_matrix = np.array(
-    [[haversine(c1, c2) for c2 in city_coords] for c1 in city_coords]
-)
+    # Haversine distance function to calculate distance between two cities
+    def haversine(coord1, coord2):
+        R = 6371  # Radius of Earth in kilometers
+        lat1, lon1 = map(radians, coord1)
+        lat2, lon2 = map(radians, coord2)
+        dlat = lat2 - lat1
+        dlon = lon2 - lon1
+        a = sin(dlat/2)**2 + cos(lat1) * cos(lat2) * sin(dlon/2)**2
+        return R * 2 * atan2(sqrt(a), sqrt(1 - a))
 
-# ---------------------------- ACO SETUP ----------------------------
-num_ants = 20
-num_iterations = 100
-alpha = 1  # pheromone influence
-beta = 5   # distance influence
-rho = 0.5  # evaporation rate
-Q = 100
+    # Distance matrix for the cities
+    dist_matrix = np.zeros((num_cities, num_cities))
+    for i in range(num_cities):
+        for j in range(num_cities):
+            dist_matrix[i][j] = haversine(coords[i], coords[j]) if i != j else np.inf
 
-pheromone = np.ones_like(distance_matrix)
+    # ACO algorithm parameters
+    alpha, beta, evaporation_rate, Q = 1, 5, 0.5, 100
+    num_ants, num_iterations = 20, 100
 
+    def tour_length(tour):
+        return sum(dist_matrix[tour[i], tour[(i + 1) % num_cities]] for i in range(num_cities))
 
-def tour_length(tour):
-    return sum(distance_matrix[tour[i], tour[(i + 1) % len(tour)]] for i in range(len(tour)))
+    # Ant Colony Optimization
+    def run_aco():
+        pheromone = np.ones((num_cities, num_cities))
+        heuristic = 1 / (dist_matrix + 1e-10)
+        best_tour, best_length = None, float('inf')
 
-def run_aco():
-    global pheromone
-    best_tour = None
-    best_length = float('inf')
+        for _ in range(num_iterations):
+            for _ in range(num_ants):
+                tour = [random.randint(0, num_cities - 1)]
+                while len(tour) < num_cities:
+                    current = tour[-1]
+                    probs = [(j, (pheromone[current][j] ** alpha) * (heuristic[current][j] ** beta))
+                             for j in range(num_cities) if j not in tour]
+                    total = sum(p[1] for p in probs)
+                    r = random.uniform(0, total)
+                    acc = 0
+                    for city, prob in probs:
+                        acc += prob
+                        if acc >= r:
+                            tour.append(city)
+                            break
+                length = tour_length(tour)
+                if length < best_length:
+                    best_tour, best_length = tour, length
+                for i in range(num_cities):
+                    a, b = tour[i], tour[(i + 1) % num_cities]
+                    pheromone[a][b] += Q / length
+            pheromone *= (1 - evaporation_rate)
 
-    for _ in range(num_iterations):
-        all_tours = []
-        all_lengths = []
+        return best_tour, best_length
 
-        for _ in range(num_ants):
-            unvisited = list(range(len(city_coords)))
-            tour = [unvisited.pop(random.randint(0, len(unvisited) - 1))]
+    # Function to save the map to an HTML file
+    def save_map_to_html(best_tour):
+        # Create the map centered around the average of selected cities
+        map_center = np.mean(coords, axis=0)
+        m = folium.Map(location=map_center.tolist(), zoom_start=5)
 
-            while unvisited:
-                current = tour[-1]
-                probs = []
-                for j in unvisited:
-                    tau = pheromone[current][j] ** alpha
-                    eta = (1 / distance_matrix[current][j]) ** beta
-                    probs.append(tau * eta)
-                probs = np.array(probs)
-                probs /= probs.sum()
-                next_city = np.random.choice(unvisited, p=probs)
-                tour.append(next_city)
-                unvisited.remove(next_city)
+        # Add the optimal route to the map
+        path = [coords[i] for i in best_tour] + [coords[best_tour[0]]]
+        folium.PolyLine(locations=path, color='green', weight=4).add_to(m)
 
-            length = tour_length(tour)
-            all_tours.append(tour)
-            all_lengths.append(length)
+        # Add markers for the cities
+        for i, city in enumerate(city_names):
+            folium.Marker(location=coords[i], popup=city).add_to(m)
 
-            if length < best_length:
-                best_tour, best_length = tour, length
+        # Save the map to an HTML file
+        map_file_path = "/tmp/optimized_route_map.html"
+        m.save(map_file_path)
 
-        pheromone *= (1 - rho)
-        for tour, length in zip(all_tours, all_lengths):
-            for i in range(len(tour)):
-                pheromone[tour[i]][tour[(i + 1) % len(tour)]] += Q / length
+        return map_file_path
 
-    return best_tour, best_length
+    # Run optimization when button is clicked
+    if st.button("🚀 Optimize Route"):
+        best_tour, best_len = run_aco()
+        st.success(f"Optimized Distance: {best_len:.2f} km")
+        st.write("**Optimized Route:**")
+        st.markdown(" → ".join([city_names[i] for i in best_tour]))
 
-# ---------------------------- MAPPING ----------------------------
-def save_map_to_html(tour):
-    fmap = folium.Map(location=city_coords[tour[0]], zoom_start=5)
-    for idx in tour:
-        folium.Marker(city_coords[idx], tooltip=city_names[idx]).add_to(fmap)
+        # Save the map to an HTML file and display it in Streamlit
+        map_file_path = save_map_to_html(best_tour)
 
-    path = [city_coords[i] for i in tour] + [city_coords[tour[0]]]
-    folium.PolyLine(path, color="blue", weight=3).add_to(fmap)
-
-    map_file = "map.html"
-    fmap.save(map_file)
-    return map_file
-
-# ---------------------------- RUN ACO ----------------------------
-if st.button("🚀 Optimize Route"):
-    # Initial random tour
-    random_tour = list(range(n))
-    random.shuffle(random_tour)
-    random_len = tour_length(random_tour)
-
-    # ACO-optimized tour
-    best_tour, best_len = run_aco()
-
-    st.markdown(f"📍 **Initial (Random) Route Distance**: `{random_len:.2f} km`")
-    st.markdown(f"✅ **Optimized Route Distance**: `{best_len:.2f} km`")
-
-    st.write("**Initial (Random) Route Order:**")
-    st.markdown(" → ".join([city_names[i] for i in random_tour]))
-
-    st.write("**Optimized Route Order:**")
-    st.markdown(" → ".join([city_names[i] for i in best_tour]))
-
-    map_file_path = save_map_to_html(best_tour)
-    with open(map_file_path, "r") as f:
-        map_html = f.read()
-        st.components.v1.html(map_html, height=600, width=700)
-
-    # Bar Chart Comparison
-    st.write("📊 **Distance Comparison: Initial vs Optimized Route**")
-    fig, ax = plt.subplots(figsize=(6, 4))
-    labels = ['Initial', 'Optimized']
-    values = [random_len, best_len]
-    colors = ['#ff9999', '#90ee90']
-    ax.bar(labels, values, color=colors)
-    ax.set_ylabel('Total Distance (km)')
-    ax.set_title('Route Distance Comparison')
-    for i, v in enumerate(values):
-        ax.text(i, v + 1, f"{v:.2f} km", ha='center', fontweight='bold')
-    st.pyplot(fig)
+        # Display the HTML file in Streamlit
+        with open(map_file_path, "r") as f:
+            map_html = f.read()
+            st.components.v1.html(map_html, height=600, width=700)
