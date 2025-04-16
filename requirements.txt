@@ -1,5 +1,5 @@
-pip install streamlit
-pip install folium
-pip install numpy
-pip install pandas
-pip install streamlit-folium
+streamlit>=1.20.0
+folium>=0.12.0
+numpy
+pandas
+streamlit-folium
