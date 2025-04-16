@@ -3,7 +3,6 @@ import folium
 import random
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
 from folium.plugins import MarkerCluster
 from geopy.distance import geodesic
 
@@ -69,7 +68,7 @@ marker_cluster = MarkerCluster().add_to(m)
 for city in cities_selected:
     folium.Marker(location=cities[city], popup=city).add_to(marker_cluster)
 
-# Add unoptimized path to map
+# Add unoptimized path to map (blue line)
 for i in range(len(unoptimized_path)-1):
     start_city = unoptimized_path[i]
     end_city = unoptimized_path[i+1]
@@ -77,7 +76,7 @@ for i in range(len(unoptimized_path)-1):
         locations=[cities[start_city], cities[end_city]], color="blue", weight=3, opacity=0.7
     ).add_to(m)
 
-# Add optimized path to map
+# Add optimized path to map (red line)
 for i in range(len(optimized_path)-1):
     start_city = optimized_path[i]
     end_city = optimized_path[i+1]
@@ -88,23 +87,3 @@ for i in range(len(optimized_path)-1):
 # Display map
 st.write("Optimized Delivery Route:")
 st.map(m)
-
-# Plot the paths using Matplotlib
-fig, ax = plt.subplots(1, 2, figsize=(12, 6))
-
-# Unoptimized Path Plot
-ax[0].plot(range(len(unoptimized_path)), [calculate_distance(unoptimized_path[i], unoptimized_path[i+1]) for i in range(len(unoptimized_path)-1)], marker='o', color='blue')
-ax[0].set_title("Unoptimized Path")
-ax[0].set_xlabel("Cities")
-ax[0].set_ylabel("Distance (km)")
-ax[0].grid(True)
-
-# Optimized Path Plot
-ax[1].plot(range(len(optimized_path)), [calculate_distance(optimized_path[i], optimized_path[i+1]) for i in range(len(optimized_path)-1)], marker='o', color='red')
-ax[1].set_title("Optimized Path")
-ax[1].set_xlabel("Cities")
-ax[1].set_ylabel("Distance (km)")
-ax[1].grid(True)
-
-# Display the plot
-st.pyplot(fig)
