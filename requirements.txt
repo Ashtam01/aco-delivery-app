@@ -3,3 +3,4 @@ folium>=0.12.0
 numpy
 pandas
 streamlit-folium
+matplotlib==3.7.1
