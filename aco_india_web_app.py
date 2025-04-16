@@ -5,7 +5,7 @@ import random
 from streamlit_folium import st_folium
 from math import radians, sin, cos, sqrt, atan2
 
-st.title("🚚 ACO Delivery Route Optimizer for Indian Cities")
+st.title(" ACO Delivery Route Optimizer for Indian Cities 🚚")
 
 # Full city dictionary with lat/lon
 india_cities = {
@@ -101,7 +101,7 @@ def run_aco():
     return best_tour, best_length
 
 # Run optimization when button is clicked
-if st.button("🚀 Optimize Route"):
+if st.button(" Optimize Route 🚀"):
     best_tour, best_len = run_aco()
     st.success(f"Optimized Distance: {best_len:.2f} km")
     st.write("**Optimized Route:**")
