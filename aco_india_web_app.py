@@ -4,7 +4,7 @@ import random
 import numpy as np
 import pandas as pd
 from folium.plugins import MarkerCluster
-from geopy.distance import geodesic
+from haversine import haversine
 
 # City coordinates (add or modify with real coordinates)
 cities = {
@@ -30,7 +30,7 @@ st.write("Selected Cities:", cities_selected)
 def calculate_distance(city1, city2):
     coord1 = cities[city1]
     coord2 = cities[city2]
-    return geodesic(coord1, coord2).km
+    return haversine(coord1, coord2)
 
 # Function to calculate total distance for a path
 def total_distance(path):
@@ -84,6 +84,7 @@ for i in range(len(optimized_path)-1):
         locations=[cities[start_city], cities[end_city]], color="red", weight=3, opacity=0.7
     ).add_to(m)
 
-# Display map
+# Display the Folium map in the Streamlit app using st.components.v1.html
 st.write("Optimized Delivery Route:")
-st.map(m)
+map_html = m._repr_html_()  # Get the HTML representation of the map
+st.components.v1.html(map_html, width=700, height=500)
