@@ -4,6 +4,7 @@ import folium
 import random
 from streamlit_folium import st_folium
 from math import radians, sin, cos, sqrt, atan2
+import os
 
 st.title("🚚 ACO Delivery Route Optimizer for Indian Cities")
 
@@ -107,8 +108,8 @@ else:
 
         return best_tour, best_length
 
-    # Function to render the map
-    def render_map(best_tour):
+    # Function to save the map to an HTML file
+    def save_map_to_html(best_tour):
         # Create the map centered around the average of selected cities
         map_center = np.mean(coords, axis=0)
         m = folium.Map(location=map_center.tolist(), zoom_start=5)
@@ -121,8 +122,11 @@ else:
         for i, city in enumerate(city_names):
             folium.Marker(location=coords[i], popup=city).add_to(m)
 
-        # Render the map using st_folium
-        st.session_state.map = st_folium(m, width=700, height=500)
+        # Save the map to an HTML file
+        map_file_path = "/tmp/optimized_route_map.html"
+        m.save(map_file_path)
+
+        return map_file_path
 
     # Run optimization when button is clicked
     if st.button("🚀 Optimize Route"):
@@ -131,5 +135,10 @@ else:
         st.write("**Optimized Route:**")
         st.markdown(" → ".join([city_names[i] for i in best_tour]))
 
-        # Call render_map function to display the folium map
-        render_map(best_tour)
+        # Save the map to an HTML file and display it in Streamlit
+        map_file_path = save_map_to_html(best_tour)
+
+        # Display the HTML file in Streamlit
+        with open(map_file_path, "r") as f:
+            map_html = f.read()
+            st.components.v1.html(map_html, height=600, width=700)
