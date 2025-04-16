@@ -107,6 +107,23 @@ else:
 
         return best_tour, best_length
 
+    # Function to render the map
+    def render_map():
+        # Create the map centered around the average of selected cities
+        map_center = np.mean(coords, axis=0)
+        m = folium.Map(location=map_center.tolist(), zoom_start=5)
+
+        # Add the optimal route to the map
+        path = [coords[i] for i in best_tour] + [coords[best_tour[0]]]
+        folium.PolyLine(locations=path, color='green', weight=4).add_to(m)
+
+        # Add markers for the cities
+        for i, city in enumerate(city_names):
+            folium.Marker(location=coords[i], popup=city).add_to(m)
+
+        # Render the map using st_folium
+        st_folium(m, width=700, height=500)
+
     # Run optimization when button is clicked
     if st.button("🚀 Optimize Route"):
         best_tour, best_len = run_aco()
@@ -114,18 +131,5 @@ else:
         st.write("**Optimized Route:**")
         st.markdown(" → ".join([city_names[i] for i in best_tour]))
 
-        # Create the map
-        map_center = np.mean(coords, axis=0)
-        m = folium.Map(location=map_center.tolist(), zoom_start=5)
-
-        # Add route to map
-        path = [coords[i] for i in best_tour] + [coords[best_tour[0]]]
-        folium.PolyLine(locations=path, color='green', weight=4).add_to(m)
-
-        # Add markers for cities
-        for i, city in enumerate(city_names):
-            folium.Marker(location=coords[i], popup=city).add_to(m)
-
-        # Use st_folium to ensure the map stays visible in Streamlit
-        folium_map = st_folium(m, width=700, height=500)
-
+        # Call render_map function to display the folium map
+        render_map()
