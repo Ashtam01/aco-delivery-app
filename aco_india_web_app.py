@@ -5,7 +5,7 @@ import random
 from streamlit_folium import st_folium
 from math import radians, sin, cos, sqrt, atan2
 
-st.title(" ACO Delivery Route Optimizer for Indian Cities 🚚")
+st.title("🚚 ACO Delivery Route Optimizer for Indian Cities")
 
 # Full city dictionary with lat/lon
 india_cities = {
@@ -40,84 +40,91 @@ india_cities = {
 # User input: Slider to choose how many cities to optimize
 n = st.slider("How many cities to optimize (min 3):", 3, len(india_cities), 6)
 
-# Generate random cities
-selected = dict(random.sample(list(india_cities.items()), n))
-coords = list(selected.values())
-city_names = list(selected.keys())
-num_cities = len(coords)
+# Multiselect dropdown to choose specific cities
+selected_cities = st.multiselect("Select the cities to optimize:", list(india_cities.keys()), max_selections=n)
 
-# Haversine distance function to calculate distance between two cities
-def haversine(coord1, coord2):
-    R = 6371  # Radius of Earth in kilometers
-    lat1, lon1 = map(radians, coord1)
-    lat2, lon2 = map(radians, coord2)
-    dlat = lat2 - lat1
-    dlon = lon2 - lon1
-    a = sin(dlat/2)**2 + cos(lat1) * cos(lat2) * sin(dlon/2)**2
-    return R * 2 * atan2(sqrt(a), sqrt(1 - a))
+# Validate the selected cities
+if len(selected_cities) != n:
+    st.warning(f"Please select exactly {n} cities.")
+else:
+    # Generate coordinates of selected cities
+    selected = {city: india_cities[city] for city in selected_cities}
+    coords = list(selected.values())
+    city_names = list(selected.keys())
+    num_cities = len(coords)
 
-# Distance matrix for the cities
-dist_matrix = np.zeros((num_cities, num_cities))
-for i in range(num_cities):
-    for j in range(num_cities):
-        dist_matrix[i][j] = haversine(coords[i], coords[j]) if i != j else np.inf
+    # Haversine distance function to calculate distance between two cities
+    def haversine(coord1, coord2):
+        R = 6371  # Radius of Earth in kilometers
+        lat1, lon1 = map(radians, coord1)
+        lat2, lon2 = map(radians, coord2)
+        dlat = lat2 - lat1
+        dlon = lon2 - lon1
+        a = sin(dlat/2)**2 + cos(lat1) * cos(lat2) * sin(dlon/2)**2
+        return R * 2 * atan2(sqrt(a), sqrt(1 - a))
 
-# ACO algorithm parameters
-alpha, beta, evaporation_rate, Q = 1, 5, 0.5, 100
-num_ants, num_iterations = 20, 100
+    # Distance matrix for the cities
+    dist_matrix = np.zeros((num_cities, num_cities))
+    for i in range(num_cities):
+        for j in range(num_cities):
+            dist_matrix[i][j] = haversine(coords[i], coords[j]) if i != j else np.inf
 
-def tour_length(tour):
-    return sum(dist_matrix[tour[i], tour[(i + 1) % num_cities]] for i in range(num_cities))
+    # ACO algorithm parameters
+    alpha, beta, evaporation_rate, Q = 1, 5, 0.5, 100
+    num_ants, num_iterations = 20, 100
 
-# Ant Colony Optimization
-def run_aco():
-    pheromone = np.ones((num_cities, num_cities))
-    heuristic = 1 / (dist_matrix + 1e-10)
-    best_tour, best_length = None, float('inf')
+    def tour_length(tour):
+        return sum(dist_matrix[tour[i], tour[(i + 1) % num_cities]] for i in range(num_cities))
 
-    for _ in range(num_iterations):
-        for _ in range(num_ants):
-            tour = [random.randint(0, num_cities - 1)]
-            while len(tour) < num_cities:
-                current = tour[-1]
-                probs = [(j, (pheromone[current][j] ** alpha) * (heuristic[current][j] ** beta))
-                         for j in range(num_cities) if j not in tour]
-                total = sum(p[1] for p in probs)
-                r = random.uniform(0, total)
-                acc = 0
-                for city, prob in probs:
-                    acc += prob
-                    if acc >= r:
-                        tour.append(city)
-                        break
-            length = tour_length(tour)
-            if length < best_length:
-                best_tour, best_length = tour, length
-            for i in range(num_cities):
-                a, b = tour[i], tour[(i + 1) % num_cities]
-                pheromone[a][b] += Q / length
-        pheromone *= (1 - evaporation_rate)
+    # Ant Colony Optimization
+    def run_aco():
+        pheromone = np.ones((num_cities, num_cities))
+        heuristic = 1 / (dist_matrix + 1e-10)
+        best_tour, best_length = None, float('inf')
 
-    return best_tour, best_length
+        for _ in range(num_iterations):
+            for _ in range(num_ants):
+                tour = [random.randint(0, num_cities - 1)]
+                while len(tour) < num_cities:
+                    current = tour[-1]
+                    probs = [(j, (pheromone[current][j] ** alpha) * (heuristic[current][j] ** beta))
+                             for j in range(num_cities) if j not in tour]
+                    total = sum(p[1] for p in probs)
+                    r = random.uniform(0, total)
+                    acc = 0
+                    for city, prob in probs:
+                        acc += prob
+                        if acc >= r:
+                            tour.append(city)
+                            break
+                length = tour_length(tour)
+                if length < best_length:
+                    best_tour, best_length = tour, length
+                for i in range(num_cities):
+                    a, b = tour[i], tour[(i + 1) % num_cities]
+                    pheromone[a][b] += Q / length
+            pheromone *= (1 - evaporation_rate)
 
-# Run optimization when button is clicked
-if st.button(" Optimize Route  🚀"):
-    best_tour, best_len = run_aco()
-    st.success(f"Optimized Distance: {best_len:.2f} km")
-    st.write("**Optimized Route:**")
-    st.markdown(" → ".join([city_names[i] for i in best_tour]))
+        return best_tour, best_length
 
-    # Create the map
-    map_center = np.mean(coords, axis=0)
-    m = folium.Map(location=map_center.tolist(), zoom_start=5)
+    # Run optimization when button is clicked
+    if st.button("🚀 Optimize Route"):
+        best_tour, best_len = run_aco()
+        st.success(f"Optimized Distance: {best_len:.2f} km")
+        st.write("**Optimized Route:**")
+        st.markdown(" → ".join([city_names[i] for i in best_tour]))
 
-    # Add route to map
-    path = [coords[i] for i in best_tour] + [coords[best_tour[0]]]
-    folium.PolyLine(locations=path, color='green', weight=4).add_to(m)
+        # Create the map
+        map_center = np.mean(coords, axis=0)
+        m = folium.Map(location=map_center.tolist(), zoom_start=5)
 
-    # Add markers for cities
-    for i, city in enumerate(city_names):
-        folium.Marker(location=coords[i], popup=city).add_to(m)
+        # Add route to map
+        path = [coords[i] for i in best_tour] + [coords[best_tour[0]]]
+        folium.PolyLine(locations=path, color='green', weight=4).add_to(m)
 
-    # Show map in Streamlit
-    st_folium(m, width=700, height=500)
+        # Add markers for cities
+        for i, city in enumerate(city_names):
+            folium.Marker(location=coords[i], popup=city).add_to(m)
+
+        # Show map in Streamlit
+        st_folium(m, width=700, height=500)
