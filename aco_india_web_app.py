@@ -108,7 +108,7 @@ else:
         return best_tour, best_length
 
     # Function to render the map
-    def render_map():
+    def render_map(best_tour):
         # Create the map centered around the average of selected cities
         map_center = np.mean(coords, axis=0)
         m = folium.Map(location=map_center.tolist(), zoom_start=5)
@@ -122,7 +122,7 @@ else:
             folium.Marker(location=coords[i], popup=city).add_to(m)
 
         # Render the map using st_folium
-        st_folium(m, width=700, height=500)
+        st.session_state.map = st_folium(m, width=700, height=500)
 
     # Run optimization when button is clicked
     if st.button("🚀 Optimize Route"):
@@ -132,4 +132,4 @@ else:
         st.markdown(" → ".join([city_names[i] for i in best_tour]))
 
         # Call render_map function to display the folium map
-        render_map()
+        render_map(best_tour)
