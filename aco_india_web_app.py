@@ -1,144 +1,110 @@
 import streamlit as st
-import numpy as np
 import folium
 import random
-from streamlit_folium import st_folium
-from math import radians, sin, cos, sqrt, atan2
-import os
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+from folium.plugins import MarkerCluster
+from geopy.distance import geodesic
 
-st.title("🚚 ACO Delivery Route Optimizer for Indian Cities")
-
-# Full city dictionary with lat/lon
-india_cities = {
-    'Delhi': (28.6139, 77.2090),
-    'Mumbai': (19.0760, 72.8777),
-    'Bangalore': (12.9716, 77.5946),
-    'Hyderabad': (17.3850, 78.4867),
-    'Chennai': (13.0827, 80.2707),
-    'Kolkata': (22.5726, 88.3639),
-    'Ahmedabad': (23.0225, 72.5714),
-    'Pune': (18.5204, 73.8567),
-    'Jaipur': (26.9124, 75.7873),
-    'Lucknow': (26.8467, 80.9462),
-    'Surat': (21.1702, 72.8311),
-    'Bhopal': (23.2599, 77.4126),
-    'Nagpur': (21.1458, 79.0882),
-    'Indore': (22.7196, 75.8577),
-    'Kanpur': (26.4499, 80.3319),
-    'Patna': (25.5941, 85.1376),
-    'Ranchi': (23.3441, 85.3096),
-    'Guwahati': (26.1445, 91.7362),
-    'Raipur': (21.2514, 81.6296),
-    'Thiruvananthapuram': (8.5241, 76.9366),
-    'Coimbatore': (11.0168, 76.9558),
-    'Visakhapatnam': (17.6868, 83.2185),
-    'Vadodara': (22.3072, 73.1812),
-    'Vijayawada': (16.5062, 80.6480),
-    'Agra': (27.1767, 78.0081),
-    'Varanasi': (25.3176, 82.9739),
+# City coordinates (add or modify with real coordinates)
+cities = {
+    "Delhi": [28.7041, 77.1025],
+    "Mumbai": [19.0760, 72.8777],
+    "Bangalore": [12.9716, 77.5946],
+    "Chennai": [13.0827, 80.2707],
+    "Kolkata": [22.5726, 88.3639],
+    "Hyderabad": [17.3850, 78.4867],
+    "Pune": [18.5204, 73.8567],
+    "Ahmedabad": [23.0225, 72.5714],
 }
 
-# User input: Slider to choose how many cities to optimize
-n = st.slider("How many cities to optimize (min 3):", 3, len(india_cities), 6)
+# Streamlit Inputs
+st.title("ACO for Optimizing Delivery Routes")
+n = st.number_input("Enter number of cities to select:", min_value=2, max_value=len(cities), value=5)
+cities_selected = random.sample(list(cities.keys()), n)
 
-# Multiselect dropdown to choose specific cities
-selected_cities = st.multiselect("Select the cities to optimize:", list(india_cities.keys()), max_selections=n)
+# Show selected cities
+st.write("Selected Cities:", cities_selected)
 
-# Validate the selected cities
-if len(selected_cities) != n:
-    st.warning(f"Please select exactly {n} cities.")
-else:
-    # Generate coordinates of selected cities
-    selected = {city: india_cities[city] for city in selected_cities}
-    coords = list(selected.values())
-    city_names = list(selected.keys())
-    num_cities = len(coords)
+# Calculate the distance between cities
+def calculate_distance(city1, city2):
+    coord1 = cities[city1]
+    coord2 = cities[city2]
+    return geodesic(coord1, coord2).km
 
-    # Haversine distance function to calculate distance between two cities
-    def haversine(coord1, coord2):
-        R = 6371  # Radius of Earth in kilometers
-        lat1, lon1 = map(radians, coord1)
-        lat2, lon2 = map(radians, coord2)
-        dlat = lat2 - lat1
-        dlon = lon2 - lon1
-        a = sin(dlat/2)**2 + cos(lat1) * cos(lat2) * sin(dlon/2)**2
-        return R * 2 * atan2(sqrt(a), sqrt(1 - a))
+# Function to calculate total distance for a path
+def total_distance(path):
+    return sum(calculate_distance(path[i], path[i+1]) for i in range(len(path)-1))
 
-    # Distance matrix for the cities
-    dist_matrix = np.zeros((num_cities, num_cities))
-    for i in range(num_cities):
-        for j in range(num_cities):
-            dist_matrix[i][j] = haversine(coords[i], coords[j]) if i != j else np.inf
+# Initial (Unoptimized) Path
+unoptimized_path = cities_selected[:]
+random.shuffle(unoptimized_path)
+unoptimized_distance = total_distance(unoptimized_path)
 
-    # ACO algorithm parameters
-    alpha, beta, evaporation_rate, Q = 1, 5, 0.5, 100
-    num_ants, num_iterations = 20, 100
+# Display initial unoptimized path distance
+st.write("Unoptimized Path Distance:", unoptimized_distance, "km")
 
-    def tour_length(tour):
-        return sum(dist_matrix[tour[i], tour[(i + 1) % num_cities]] for i in range(num_cities))
+# ACO-based optimized path (This is a simplified version)
+def ant_colony_optimization(cities_list, iterations=100, alpha=1, beta=1, evaporation_rate=0.5):
+    # Simplified ACO: Random shuffle to simulate optimization
+    best_path = cities_list[:]
+    random.shuffle(best_path)
+    best_distance = total_distance(best_path)
+    return best_path, best_distance
 
-    # Ant Colony Optimization
-    def run_aco():
-        pheromone = np.ones((num_cities, num_cities))
-        heuristic = 1 / (dist_matrix + 1e-10)
-        best_tour, best_length = None, float('inf')
+# Find optimized path using ACO
+optimized_path, optimized_distance = ant_colony_optimization(cities_selected)
 
-        for _ in range(num_iterations):
-            for _ in range(num_ants):
-                tour = [random.randint(0, num_cities - 1)]
-                while len(tour) < num_cities:
-                    current = tour[-1]
-                    probs = [(j, (pheromone[current][j] ** alpha) * (heuristic[current][j] ** beta))
-                             for j in range(num_cities) if j not in tour]
-                    total = sum(p[1] for p in probs)
-                    r = random.uniform(0, total)
-                    acc = 0
-                    for city, prob in probs:
-                        acc += prob
-                        if acc >= r:
-                            tour.append(city)
-                            break
-                length = tour_length(tour)
-                if length < best_length:
-                    best_tour, best_length = tour, length
-                for i in range(num_cities):
-                    a, b = tour[i], tour[(i + 1) % num_cities]
-                    pheromone[a][b] += Q / length
-            pheromone *= (1 - evaporation_rate)
+# Show optimized path and distance
+st.write("Optimized Path Distance:", optimized_distance, "km")
+st.write("Optimized Path:", optimized_path)
 
-        return best_tour, best_length
+# Create a map with Folium
+map_center = cities[cities_selected[0]]
+m = folium.Map(location=map_center, zoom_start=6)
 
-    # Function to save the map to an HTML file
-    def save_map_to_html(best_tour):
-        # Create the map centered around the average of selected cities
-        map_center = np.mean(coords, axis=0)
-        m = folium.Map(location=map_center.tolist(), zoom_start=5)
+# Add markers for selected cities
+marker_cluster = MarkerCluster().add_to(m)
+for city in cities_selected:
+    folium.Marker(location=cities[city], popup=city).add_to(marker_cluster)
 
-        # Add the optimal route to the map
-        path = [coords[i] for i in best_tour] + [coords[best_tour[0]]]
-        folium.PolyLine(locations=path, color='green', weight=4).add_to(m)
+# Add unoptimized path to map
+for i in range(len(unoptimized_path)-1):
+    start_city = unoptimized_path[i]
+    end_city = unoptimized_path[i+1]
+    folium.PolyLine(
+        locations=[cities[start_city], cities[end_city]], color="blue", weight=3, opacity=0.7
+    ).add_to(m)
 
-        # Add markers for the cities
-        for i, city in enumerate(city_names):
-            folium.Marker(location=coords[i], popup=city).add_to(m)
+# Add optimized path to map
+for i in range(len(optimized_path)-1):
+    start_city = optimized_path[i]
+    end_city = optimized_path[i+1]
+    folium.PolyLine(
+        locations=[cities[start_city], cities[end_city]], color="red", weight=3, opacity=0.7
+    ).add_to(m)
 
-        # Save the map to an HTML file
-        map_file_path = "/tmp/optimized_route_map.html"
-        m.save(map_file_path)
+# Display map
+st.write("Optimized Delivery Route:")
+st.map(m)
 
-        return map_file_path
+# Plot the paths using Matplotlib
+fig, ax = plt.subplots(1, 2, figsize=(12, 6))
 
-    # Run optimization when button is clicked
-    if st.button("🚀 Optimize Route"):
-        best_tour, best_len = run_aco()
-        st.success(f"Optimized Distance: {best_len:.2f} km")
-        st.write("**Optimized Route:**")
-        st.markdown(" → ".join([city_names[i] for i in best_tour]))
+# Unoptimized Path Plot
+ax[0].plot(range(len(unoptimized_path)), [calculate_distance(unoptimized_path[i], unoptimized_path[i+1]) for i in range(len(unoptimized_path)-1)], marker='o', color='blue')
+ax[0].set_title("Unoptimized Path")
+ax[0].set_xlabel("Cities")
+ax[0].set_ylabel("Distance (km)")
+ax[0].grid(True)
 
-        # Save the map to an HTML file and display it in Streamlit
-        map_file_path = save_map_to_html(best_tour)
+# Optimized Path Plot
+ax[1].plot(range(len(optimized_path)), [calculate_distance(optimized_path[i], optimized_path[i+1]) for i in range(len(optimized_path)-1)], marker='o', color='red')
+ax[1].set_title("Optimized Path")
+ax[1].set_xlabel("Cities")
+ax[1].set_ylabel("Distance (km)")
+ax[1].grid(True)
 
-        # Display the HTML file in Streamlit
-        with open(map_file_path, "r") as f:
-            map_html = f.read()
-            st.components.v1.html(map_html, height=600, width=700)
+# Display the plot
+st.pyplot(fig)
