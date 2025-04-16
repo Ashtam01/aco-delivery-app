@@ -126,5 +126,6 @@ else:
         for i, city in enumerate(city_names):
             folium.Marker(location=coords[i], popup=city).add_to(m)
 
-        # Show map in Streamlit
-        st_folium(m, width=700, height=500)
+        # Use st_folium to ensure the map stays visible in Streamlit
+        folium_map = st_folium(m, width=700, height=500)
+
