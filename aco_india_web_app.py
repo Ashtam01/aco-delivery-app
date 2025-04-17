@@ -120,11 +120,11 @@ else:
     with col1:
         st.markdown("**Unoptimized Path:**")
         st.write(" ➡️ ".join(unoptimized_path))
-        st.write(f"Total Distance: `{unoptimized_distance:.4f}` km")
+        st.write(f"Total Distance: `{unoptimized_distance:.2f}` km")
     with col2:
         st.markdown("**Optimized Path (ACO):**")
         st.write(" ➡️ ".join(optimized_path))
-        st.write(f"Total Distance: `{optimized_distance:.4f}` km")
+        st.write(f"Total Distance: `{optimized_distance:.2f}` km")
 
     # Map visualization
     m = folium.Map(location=cities[start_city], zoom_start=5)
