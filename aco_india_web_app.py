@@ -3,7 +3,6 @@ import folium
 from geopy.distance import geodesic
 from folium.plugins import MarkerCluster
 import random
-import math
 
 # City coordinates
 cities = {
@@ -36,7 +35,7 @@ cities = {
 }
 
 st.set_page_config(layout="wide")
-st.title(" Delivery Route Optimization using Ant Colony Optimization (ACO) 🚚")
+st.title("🚚 Delivery Route Optimization using Ant Colony Optimization (ACO)")
 
 # Step 1: Number of cities
 n = st.number_input("Enter the number of cities to include (Min: 3)", min_value=3, max_value=len(cities), value=4)
@@ -55,6 +54,9 @@ intermediate_cities = st.multiselect(
     max_selections=num_intermediate
 )
 
+# Step 4: User input for speed
+speed = st.number_input("Enter average travel speed (km/h)", min_value=10, max_value=150, value=50)
+
 if len(intermediate_cities) != num_intermediate:
     st.warning(f"Please select exactly {num_intermediate} cities.")
 else:
@@ -63,14 +65,18 @@ else:
     def calculate_distance(city1, city2):
         return geodesic(cities[city1], cities[city2]).km
 
+    def calculate_time(distance, speed):
+        return distance / speed  # time in hours
+
     def total_distance(path):
         return sum(calculate_distance(path[i], path[i + 1]) for i in range(len(path) - 1))
 
     # Unoptimized path (user selection order)
     unoptimized_path = full_city_list[:]
     unoptimized_distance = total_distance(unoptimized_path)
+    unoptimized_time = calculate_time(unoptimized_distance, speed)
 
-    # ACO implementation
+    # ACO optimization
     def aco_optimize(city_list, iterations=100, ants=20, alpha=1, beta=5, rho=0.5):
         n = len(city_list)
         dist = [[calculate_distance(city_list[i], city_list[j]) for j in range(n)] for i in range(n)]
@@ -103,36 +109,42 @@ else:
                 if length < best_length:
                     best_path = path
                     best_length = length
-            # Pheromone update
+            # Pheromone evaporation
             for i in range(n):
                 for j in range(n):
                     pheromone[i][j] *= (1 - rho)
             for path, length in all_paths:
                 for i in range(len(path) - 1):
                     pheromone[path[i]][path[i + 1]] += 1.0 / length
+
         return [city_list[i] for i in best_path], best_length
 
     optimized_path, optimized_distance = aco_optimize(
-    full_city_list,
-    iterations=150,
-    ants=30,
-    alpha=1,
-    beta=5,
-    rho=0.5
+        full_city_list,
+        iterations=150,
+        ants=30,
+        alpha=1,
+        beta=5,
+        rho=0.5
     )
 
+    optimized_time = calculate_time(optimized_distance, speed)
 
     # Display routes
     st.subheader("📊 Route Summary")
     col1, col2 = st.columns(2)
+
     with col1:
         st.markdown("**Unoptimized Path:**")
         st.write(" ➡️ ".join(unoptimized_path))
         st.write(f"Total Distance: `{unoptimized_distance:.2f}` km")
+        st.write(f"Estimated Time: `{unoptimized_time:.2f}` hours")
+
     with col2:
         st.markdown("**Optimized Path (ACO):**")
         st.write(" ➡️ ".join(optimized_path))
         st.write(f"Total Distance: `{optimized_distance:.2f}` km")
+        st.write(f"Estimated Time: `{optimized_time:.2f}` hours")
 
     # Map visualization
     m = folium.Map(location=cities[start_city], zoom_start=5)
@@ -141,14 +153,14 @@ else:
     for city in full_city_list:
         folium.Marker(location=cities[city], popup=city).add_to(marker_cluster)
 
-    # Unoptimized in blue
+    # Unoptimized in red
     for i in range(len(unoptimized_path) - 1):
         folium.PolyLine(
             [cities[unoptimized_path[i]], cities[unoptimized_path[i + 1]]],
             color="red", weight=2.5, opacity=0.6
         ).add_to(m)
 
-    # Optimized in red
+    # Optimized in blue
     for i in range(len(optimized_path) - 1):
         folium.PolyLine(
             [cities[optimized_path[i]], cities[optimized_path[i + 1]]],
