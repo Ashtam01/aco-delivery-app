@@ -4,7 +4,9 @@ from geopy.distance import geodesic
 from folium.plugins import MarkerCluster
 import random
 
-# City coordinates
+# -----------------------------
+# City coordinates dictionary
+# -----------------------------
 cities = {
     'Delhi': (28.6139, 77.2090),
     'Mumbai': (19.0760, 72.8777),
@@ -37,8 +39,11 @@ cities = {
 st.set_page_config(layout="wide")
 st.title("🚚 Delivery Route Optimization using Ant Colony Optimization (ACO)")
 
+# Speed input
+speed = st.number_input("Enter average delivery speed (km/h)", min_value=10, max_value=150, value=60)
+
 # Step 1: Number of cities
-n = st.number_input("Enter the number of cities to include (Min: 3)", min_value=3, max_value=len(cities), value=4)
+n = st.number_input("Enter number of cities to include (Min: 3)", min_value=3, max_value=len(cities), value=4)
 
 # Step 2: Start & End City
 city_names = list(cities.keys())
@@ -54,30 +59,24 @@ intermediate_cities = st.multiselect(
     max_selections=num_intermediate
 )
 
-# Step 4: Speed input
-speed = st.number_input("Enter average speed (km/h)", min_value=10, max_value=150, value=60)
-
 if len(intermediate_cities) != num_intermediate:
-    st.warning(f"Please select exactly {num_intermediate} cities.")
+    st.warning(f"Please select exactly {num_intermediate} intermediate cities.")
 else:
     full_city_list = [start_city] + intermediate_cities + [end_city]
 
     def calculate_distance(city1, city2):
         return geodesic(cities[city1], cities[city2]).km
 
-    def calculate_time(distance, speed):
-        return distance / speed  # time in hours
-
     def total_distance(path):
         return sum(calculate_distance(path[i], path[i + 1]) for i in range(len(path) - 1))
 
-    # Unoptimized path
-    unoptimized_path = full_city_list[:]
-    unoptimized_distance = total_distance(unoptimized_path)
-    unoptimized_time = calculate_time(unoptimized_distance, speed)
+    def total_time(distance):
+        return distance / speed  # in hours
 
-    # ACO optimization
-    def aco_optimize(city_list, iterations=100, ants=20, alpha=1, beta=5, rho=0.5):
+    # --------------------------
+    # ACO Algorithm
+    # --------------------------
+    def aco_optimize(city_list, iterations=150, ants=30, alpha=1, beta=5, rho=0.5):
         n = len(city_list)
         dist = [[calculate_distance(city_list[i], city_list[j]) for j in range(n)] for i in range(n)]
         pheromone = [[1.0 for _ in range(n)] for _ in range(n)]
@@ -89,8 +88,8 @@ else:
                     tau = pheromone[i][j] ** alpha
                     eta = (1.0 / dist[i][j]) ** beta if dist[i][j] > 0 else 0
                     probs.append((j, tau * eta))
-            total = sum(p[1] for _, p in probs)
-            return [(j, p / total) for j, p in probs]
+            total = sum(p for _, p in probs)
+            return [(j, p / total) for j, p in probs] if total > 0 else []
 
         best_path = None
         best_length = float('inf')
@@ -101,6 +100,8 @@ else:
                 path = [0]
                 while len(path) < n - 1:
                     probs = probability(path[-1], path)
+                    if not probs:
+                        break
                     next_city = random.choices([x[0] for x in probs], weights=[x[1] for x in probs])[0]
                     path.append(next_city)
                 path.append(n - 1)
@@ -109,58 +110,59 @@ else:
                 if length < best_length:
                     best_path = path
                     best_length = length
-
             # Pheromone evaporation
             for i in range(n):
                 for j in range(n):
                     pheromone[i][j] *= (1 - rho)
+            # Pheromone update
             for path, length in all_paths:
                 for i in range(len(path) - 1):
                     pheromone[path[i]][path[i + 1]] += 1.0 / length
 
         return [city_list[i] for i in best_path], best_length
 
-    optimized_path, optimized_distance = aco_optimize(
-        full_city_list,
-        iterations=150,
-        ants=30,
-        alpha=1,
-        beta=5,
-        rho=0.5
-    )
-    optimized_time = calculate_time(optimized_distance, speed)
+    # Unoptimized route
+    unoptimized_path = full_city_list
+    unoptimized_distance = total_distance(unoptimized_path)
+    unoptimized_time = total_time(unoptimized_distance)
 
-    # Route Summary
+    # Optimized route
+    optimized_path, optimized_distance = aco_optimize(full_city_list)
+    optimized_time = total_time(optimized_distance)
+
+    # --------------------------
+    # Display Results
+    # --------------------------
     st.subheader("📊 Route Summary")
     col1, col2 = st.columns(2)
-
     with col1:
         st.markdown("**Unoptimized Path:**")
         st.write(" ➡️ ".join(unoptimized_path))
-        st.write(f"Total Distance: `{unoptimized_distance:.2f}` km")
+        st.write(f"Distance: `{unoptimized_distance:.2f}` km")
         st.write(f"Estimated Time: `{unoptimized_time:.2f}` hours")
-
     with col2:
         st.markdown("**Optimized Path (ACO):**")
         st.write(" ➡️ ".join(optimized_path))
-        st.write(f"Total Distance: `{optimized_distance:.2f}` km")
+        st.write(f"Distance: `{optimized_distance:.2f}` km")
         st.write(f"Estimated Time: `{optimized_time:.2f}` hours")
 
+    # --------------------------
     # Map Visualization
+    # --------------------------
     m = folium.Map(location=cities[start_city], zoom_start=5)
     marker_cluster = MarkerCluster().add_to(m)
 
     for city in full_city_list:
         folium.Marker(location=cities[city], popup=city).add_to(marker_cluster)
 
-    # Draw unoptimized path (red)
+    # Unoptimized path in RED
     for i in range(len(unoptimized_path) - 1):
         folium.PolyLine(
             [cities[unoptimized_path[i]], cities[unoptimized_path[i + 1]]],
             color="red", weight=2.5, opacity=0.6
         ).add_to(m)
 
-    # Draw optimized path (blue)
+    # Optimized path in BLUE
     for i in range(len(optimized_path) - 1):
         folium.PolyLine(
             [cities[optimized_path[i]], cities[optimized_path[i + 1]]],
