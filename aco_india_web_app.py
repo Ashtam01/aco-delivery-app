@@ -137,14 +137,14 @@ else:
     for i in range(len(unoptimized_path) - 1):
         folium.PolyLine(
             [cities[unoptimized_path[i]], cities[unoptimized_path[i + 1]]],
-            color="blue", weight=2.5, opacity=0.6
+            color="red", weight=2.5, opacity=0.6
         ).add_to(m)
 
     # Optimized in red
     for i in range(len(optimized_path) - 1):
         folium.PolyLine(
             [cities[optimized_path[i]], cities[optimized_path[i + 1]]],
-            color="red", weight=3, opacity=0.8
+            color="blue", weight=3, opacity=0.8
         ).add_to(m)
 
     st.subheader("🗺️ Route Visualization (Blue = Unoptimized, Red = Optimized)")
