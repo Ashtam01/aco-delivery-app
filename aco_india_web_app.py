@@ -36,7 +36,7 @@ cities = {
 }
 
 st.set_page_config(layout="wide")
-st.title("🚚 Delivery Route Optimization using Ant Colony Optimization (ACO)")
+st.title(" Delivery Route Optimization using Ant Colony Optimization (ACO) 🚚")
 
 # Step 1: Number of cities
 n = st.number_input("Enter the number of cities to include (Min: 3)", min_value=3, max_value=len(cities), value=4)
@@ -120,11 +120,11 @@ else:
     with col1:
         st.markdown("**Unoptimized Path:**")
         st.write(" ➡️ ".join(unoptimized_path))
-        st.write(f"Total Distance: `{unoptimized_distance:.2f}` km")
+        st.write(f"Total Distance: `{unoptimized_distance:.4f}` km")
     with col2:
         st.markdown("**Optimized Path (ACO):**")
         st.write(" ➡️ ".join(optimized_path))
-        st.write(f"Total Distance: `{optimized_distance:.2f}` km")
+        st.write(f"Total Distance: `{optimized_distance:.4f}` km")
 
     # Map visualization
     m = folium.Map(location=cities[start_city], zoom_start=5)
