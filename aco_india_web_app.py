@@ -39,8 +39,6 @@ cities = {
 st.set_page_config(layout="wide")
 st.title("🚚 Delivery Route Optimization using Ant Colony Optimization (ACO)")
 
-# Speed input
-speed = st.number_input("Enter average delivery speed (km/h)", min_value=10, max_value=150, value=60)
 
 # Step 1: Number of cities
 n = st.number_input("Enter number of cities to include (Min: 3)", min_value=3, max_value=len(cities), value=4)
@@ -58,6 +56,10 @@ intermediate_cities = st.multiselect(
     options=remaining_cities,
     max_selections=num_intermediate
 )
+
+# Speed input
+speed = st.number_input("Enter average delivery speed (km/h)", min_value=10, max_value=150, value=60)
+
 
 if len(intermediate_cities) != num_intermediate:
     st.warning(f"Please select exactly {num_intermediate} intermediate cities.")
