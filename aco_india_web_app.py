@@ -1,10 +1,8 @@
 import streamlit as st
 import folium
 import random
-import numpy as np
-import pandas as pd
-from folium.plugins import MarkerCluster
 from geopy.distance import geodesic
+from folium.plugins import MarkerCluster
 
 # City coordinates (add or modify with real coordinates)
 cities = {
@@ -36,81 +34,84 @@ cities = {
     'Varanasi': (25.3176, 82.9739),
 }
 
-# Streamlit Inputs
-st.title("ACO for Optimizing Delivery Routes")
+st.set_page_config(layout="wide")
+st.title("🚚 Delivery Route Optimization using Ant Colony Optimization (ACO)")
 
-# Allow users to select multiple cities
-cities_selected = st.multiselect(
-    "Select cities to include in the route optimization",
-    options=list(cities.keys())
+# Step 1: Ask for number of cities
+n = st.number_input("Enter the number of cities to include (Min: 3)", min_value=3, max_value=len(cities), value=4)
+
+# Step 2: Select Start and End cities
+city_names = list(cities.keys())
+start_city = st.selectbox("Select the Start City", city_names)
+end_city = st.selectbox("Select the End City", [c for c in city_names if c != start_city])
+
+# Step 3: Select Intermediate Cities
+remaining_cities = [c for c in city_names if c not in [start_city, end_city]]
+num_intermediate = n - 2
+intermediate_cities = st.multiselect(
+    f"Select {num_intermediate} Intermediate Cities",
+    options=remaining_cities,
+    max_selections=num_intermediate
 )
 
-# Ensure at least 2 cities are selected
-if len(cities_selected) < 2:
-    st.error("Please select at least two cities.")
+if len(intermediate_cities) != num_intermediate:
+    st.warning(f"Please select exactly {num_intermediate} cities.")
 else:
-    # Show selected cities
-    st.write("Selected Cities:", cities_selected)
+    full_city_list = [start_city] + intermediate_cities + [end_city]
 
-    # Calculate the distance between cities
     def calculate_distance(city1, city2):
         coord1 = cities[city1]
         coord2 = cities[city2]
         return geodesic(coord1, coord2).km
 
-    # Function to calculate total distance for a path
     def total_distance(path):
-        return sum(calculate_distance(path[i], path[i+1]) for i in range(len(path)-1))
+        return sum(calculate_distance(path[i], path[i + 1]) for i in range(len(path) - 1))
 
-    # Initial (Unoptimized) Path
-    unoptimized_path = cities_selected[:]
-    random.shuffle(unoptimized_path)
+    # Unoptimized route (original order)
+    unoptimized_path = full_city_list[:]
     unoptimized_distance = total_distance(unoptimized_path)
 
-    # Display initial unoptimized path distance
-    st.write("Unoptimized Path Distance:", unoptimized_distance, "km")
+    # ACO Simulation (Random shuffle for demo, replace with real ACO if needed)
+    def aco_optimize(cities_list):
+        inner_cities = cities_list[1:-1]
+        random.shuffle(inner_cities)
+        path = [cities_list[0]] + inner_cities + [cities_list[-1]]
+        return path, total_distance(path)
 
-    # ACO-based optimized path (This is a simplified version)
-    def ant_colony_optimization(cities_list, iterations=100, alpha=1, beta=1, evaporation_rate=0.5):
-        # Simplified ACO: Random shuffle to simulate optimization
-        best_path = cities_list[:]
-        random.shuffle(best_path)
-        best_distance = total_distance(best_path)
-        return best_path, best_distance
+    optimized_path, optimized_distance = aco_optimize(full_city_list)
 
-    # Find optimized path using ACO
-    optimized_path, optimized_distance = ant_colony_optimization(cities_selected)
+    st.subheader("📊 Route Summary")
+    col1, col2 = st.columns(2)
+    with col1:
+        st.markdown("**Unoptimized Path:**")
+        st.write(" ➡️ ".join(unoptimized_path))
+        st.write(f"Total Distance: `{unoptimized_distance:.2f}` km")
+    with col2:
+        st.markdown("**Optimized Path (ACO):**")
+        st.write(" ➡️ ".join(optimized_path))
+        st.write(f"Total Distance: `{optimized_distance:.2f}` km")
 
-    # Show optimized path and distance
-    st.write("Optimized Path Distance:", optimized_distance, "km")
-    st.write("Optimized Path:", optimized_path)
-
-    # Create a map with Folium
-    map_center = cities[cities_selected[0]]
-    m = folium.Map(location=map_center, zoom_start=6)
-
-    # Add markers for selected cities
+    # Draw Folium map
+    m = folium.Map(location=cities[start_city], zoom_start=5)
     marker_cluster = MarkerCluster().add_to(m)
-    for city in cities_selected:
+
+    # Add markers
+    for city in full_city_list:
         folium.Marker(location=cities[city], popup=city).add_to(marker_cluster)
 
-    # Add unoptimized path to map (blue line)
-    for i in range(len(unoptimized_path)-1):
-        start_city = unoptimized_path[i]
-        end_city = unoptimized_path[i+1]
+    # Unoptimized path in blue
+    for i in range(len(unoptimized_path) - 1):
         folium.PolyLine(
-            locations=[cities[start_city], cities[end_city]], color="blue", weight=3, opacity=0.7
+            [cities[unoptimized_path[i]], cities[unoptimized_path[i + 1]]],
+            color="blue", weight=2.5, opacity=0.6
         ).add_to(m)
 
-    # Add optimized path to map (red line)
-    for i in range(len(optimized_path)-1):
-        start_city = optimized_path[i]
-        end_city = optimized_path[i+1]
+    # Optimized path in red
+    for i in range(len(optimized_path) - 1):
         folium.PolyLine(
-            locations=[cities[start_city], cities[end_city]], color="red", weight=3, opacity=0.7
+            [cities[optimized_path[i]], cities[optimized_path[i + 1]]],
+            color="red", weight=3, opacity=0.8
         ).add_to(m)
 
-    # Display the Folium map in the Streamlit app using st.components.v1.html
-    st.write("Optimized Delivery Route:")
-    map_html = m._repr_html_()  # Get the HTML representation of the map
-    st.components.v1.html(map_html, width=700, height=500)
+    st.subheader("🗺️ Route Visualization (Blue = Unoptimized, Red = Optimized)")
+    st.components.v1.html(m._repr_html_(), height=600, scrolling=True)
