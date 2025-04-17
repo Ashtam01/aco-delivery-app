@@ -155,5 +155,5 @@ else:
             color="blue", weight=3, opacity=0.8
         ).add_to(m)
 
-    st.subheader("🗺️ Route Visualization (Blue = Unoptimized, Red = Optimized)")
+    st.subheader("🗺️ Route Visualization (Red = Unoptimized, Blue = Optimized)")
     st.components.v1.html(m._repr_html_(), height=600, scrolling=True)
