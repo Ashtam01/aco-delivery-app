@@ -112,7 +112,15 @@ else:
                     pheromone[path[i]][path[i + 1]] += 1.0 / length
         return [city_list[i] for i in best_path], best_length
 
-    optimized_path, optimized_distance = aco_optimize(full_city_list)
+    optimized_path, optimized_distance = aco_optimize(
+    full_city_list,
+    iterations=150,
+    ants=30,
+    alpha=1,
+    beta=5,
+    rho=0.5
+    )
+
 
     # Display routes
     st.subheader("📊 Route Summary")
