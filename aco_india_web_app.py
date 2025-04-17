@@ -9,17 +9,18 @@ st.set_page_config(layout="wide")
 st.title("🚚 Delivery Route Optimization using Ant Colony Optimization (ACO)")
 
 # -----------------------------
-# Upload Amazon Locations CSV
+# Upload Amazon Dataset
 # -----------------------------
-uploaded_file = st.file_uploader("Upload Amazon Locations CSV", type="csv")
+uploaded_file = st.file_uploader("Upload Amazon Delivery Dataset (CSV)", type="csv")
 
 if uploaded_file:
     df = pd.read_csv(uploaded_file)
 
-    if not {'Location', 'Latitude', 'Longitude'}.issubset(df.columns):
-        st.error("CSV must contain 'Location', 'Latitude', and 'Longitude' columns.")
+    if not {'Store_Latitude', 'Store_Longitude'}.issubset(df.columns):
+        st.error("CSV must contain 'Store_Latitude' and 'Store_Longitude' columns.")
     else:
-        cities = {row['Location']: (row['Latitude'], row['Longitude']) for _, row in df.iterrows()}
+        # Create a location dictionary with synthetic names
+        cities = {f"Store_{i+1}": (row['Store_Latitude'], row['Store_Longitude']) for i, row in df.iterrows()}
 
         # Step 1: Number of locations
         n = st.number_input("Enter number of locations to include (Min: 3)", min_value=3, max_value=len(cities), value=4)
@@ -115,12 +116,12 @@ if uploaded_file:
             col1, col2 = st.columns(2)
             with col1:
                 st.markdown("**Unoptimized Path:**")
-                st.write(" ➡️ ".join(unoptimized_path))
+                st.write(" ➞ ".join(unoptimized_path))
                 st.write(f"Distance: `{unoptimized_distance:.2f}` km")
                 st.write(f"Estimated Time: `{unoptimized_time:.2f}` hours")
             with col2:
                 st.markdown("**Optimized Path (ACO):**")
-                st.write(" ➡️ ".join(optimized_path))
+                st.write(" ➞ ".join(optimized_path))
                 st.write(f"Distance: `{optimized_distance:.2f}` km")
                 st.write(f"Estimated Time: `{optimized_time:.2f}` hours")
 
@@ -143,5 +144,5 @@ if uploaded_file:
                     color="blue", weight=3, opacity=0.8
                 ).add_to(m)
 
-            st.subheader("🗺️ Route Visualization (Red = Unoptimized, Blue = Optimized)")
+            st.subheader("🗌 Route Visualization (Red = Unoptimized, Blue = Optimized)")
             st.components.v1.html(m._repr_html_(), height=600, scrolling=True)
