@@ -1,10 +1,10 @@
-# 🐜 ACO Delivery App
+#  ACO Delivery App
 
 A Python-based web application for optimizing delivery routes using the Ant Colony Optimization (ACO) algorithm. This app allows users to select Indian cities and visualize the most efficient delivery path, minimizing total distance and improving logistics efficiency.
 
 ---
 
-## 🚀 Features
+##  Features
 
 - 📍 Manual selection of delivery cities from a predefined list
 - 🐜 Ant Colony Optimization (ACO) for route minimization
@@ -14,7 +14,7 @@ A Python-based web application for optimizing delivery routes using the Ant Colo
 
 ---
 
-## 📸 Screenshots
+##  Screenshots
 
 <img width="1336" alt="image" src="https://github.com/user-attachments/assets/44287a74-a32e-4f8a-b985-bdf66d4e41a2" />
 
@@ -24,11 +24,11 @@ A Python-based web application for optimizing delivery routes using the Ant Colo
 
 ---
 
-## ☁️ Deployment (Streamlit Cloud)
+##  Deployment (Streamlit Cloud)
 
 To deploy this app on **Streamlit Cloud**:
 
-1. Push the project to your GitHub repository (already done if you're reading this).
+1. Push the project to your GitHub repository.
 2. Go to [Streamlit Cloud](https://streamlit.io/cloud) and sign in with your GitHub account.
 3. Click on **"New app"** and select your repository.
 4. Set the main file path to: `aco_india_web_app.py`
@@ -36,7 +36,7 @@ To deploy this app on **Streamlit Cloud**:
 
 ---
 
-## 📁 Project Structure
+## Project Structure
 
 
 
@@ -52,7 +52,7 @@ To deploy this app on **Streamlit Cloud**:
 
 ---
 
-## 🛠️ Technologies Used
+##  Technologies Used
 
 - Python 3
 - Streamlit
@@ -62,7 +62,7 @@ To deploy this app on **Streamlit Cloud**:
 
 ---
 
-## 🤝 Contribution
+##  Contribution
 
 Contributions are welcome!
 
@@ -71,7 +71,7 @@ If you'd like to improve this project:
 - Fork the repository
 - Create a new feature branch
 - Make your changes
-- Submit a pull request 🚀
+- Submit a pull request 
 
 All contributions that enhance functionality, performance, or user experience are greatly appreciated.
 
