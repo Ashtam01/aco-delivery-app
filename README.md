@@ -30,13 +30,13 @@ To deploy this app on Streamlit Cloud:
 
 **Project Structure**
 
-aco-delivery-app/
+```aco-delivery-app/
 ├── .devcontainer/            # VS Code dev container settings (optional)
 ├── aco_india_web_app.py      # Main Streamlit app
 ├── requirements.txt          # Project dependencies
 ├── python_version.txt        # Python version info
 └── README.md                 # Project documentation
-
+```
 
 🛠 **Technologies Used**
 1. Python 3
