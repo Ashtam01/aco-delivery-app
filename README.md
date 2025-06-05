@@ -11,9 +11,12 @@ A Python-based web application for optimizing delivery routes using the Ant Colo
 - Built with Streamlit for a simple and interactive UI
 
 
-<img width="447" alt="image" src="https://github.com/user-attachments/assets/4dd72057-e094-46d4-91f5-6686fde11e90" />
-<img width="445" alt="image" src="https://github.com/user-attachments/assets/93a8ee14-1e1c-431e-accf-e8d1096a92ef" />
-<img width="445" alt="image" src="https://github.com/user-attachments/assets/67b2a3af-0456-42bf-a365-769ad20037bd" />
+<img width="1336" alt="image" src="https://github.com/user-attachments/assets/44287a74-a32e-4f8a-b985-bdf66d4e41a2" />
+
+<img width="1297" alt="image" src="https://github.com/user-attachments/assets/b74d8cbd-866f-4bac-ab20-b315c61d8042" />
+
+<img width="843" alt="image" src="https://github.com/user-attachments/assets/4dd5ba54-d198-44f5-8482-0dbdde1a7d89" />
+
 
 
 
