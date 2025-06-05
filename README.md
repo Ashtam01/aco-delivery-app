@@ -2,7 +2,7 @@
 
 A Python-based web application for optimizing delivery routes using the Ant Colony Optimization (ACO) algorithm. This app allows users to select Indian cities and visualize the most efficient delivery path, minimizing total distance and improving logistics efficiency.
 
-## 🚀 Features
+## Features
 
 - ✅ Manual selection of delivery cities from a predefined list
 - 🐜 Ant Colony Optimization (ACO) for route minimization
