@@ -24,6 +24,7 @@ A Python-based web application for optimizing delivery routes using the Ant Colo
 
 **Deployment (Streamlit Cloud)**
 To deploy this app on Streamlit Cloud:
+
 1. Push the project to your GitHub repository (already done if you're reading this).
 2. Go to Streamlit Cloud and sign in with your GitHub account.
 3. Click on "New app" and select your repository.
