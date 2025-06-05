@@ -19,7 +19,23 @@ A Python-based web application for optimizing delivery routes using the Ant Colo
 
 
 
+**Deployment (Streamlit Cloud)**
+To deploy this app on Streamlit Cloud:
+1. Push the project to your GitHub repository (already done if you're reading this).
+2. Go to Streamlit Cloud and sign in with your GitHub account.
+3. Click on "New app" and select your repository.
+4. Set the main file path to aco_india_web_app.py.
+5. Deploy and share the app link!
 
+
+**Project Structure**
+
+aco-delivery-app/
+├── .devcontainer/            # VS Code dev container settings (optional)
+├── aco_india_web_app.py      # Main Streamlit app
+├── requirements.txt          # Project dependencies
+├── python_version.txt        # Python version info
+└── README.md                 # Project documentation
 
 
 🛠 **Technologies Used**
@@ -40,3 +56,11 @@ If you'd like to improve this project:
 
 
 All contributions that enhance functionality, performance, or user experience are greatly appreciated.
+
+
+📬 Contact
+Tanish Kumar
+GitHub: @TANiSH-17
+Email: tanishkskr@gmail.com
+
+Developed and maintained by Tanish Kumar.
