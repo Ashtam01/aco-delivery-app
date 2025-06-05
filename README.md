@@ -22,7 +22,7 @@ A Python-based web application for optimizing delivery routes using the Ant Colo
 
 
 
-🛠 Technologies Used
+🛠 **Technologies Used**
 1. Python 3
 2. Streamlit
 3. Folium
@@ -30,7 +30,7 @@ A Python-based web application for optimizing delivery routes using the Ant Colo
 5. Geopy (for distances between coordinates)
 
 
-🤝 Contribution
+🤝** Contribution**
 Contributions are welcome!
 If you'd like to improve this project:
 - Fork the repo
