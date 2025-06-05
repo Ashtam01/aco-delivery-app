@@ -4,11 +4,11 @@ A Python-based web application for optimizing delivery routes using the Ant Colo
 
 ## Features
 
-- ✅ Manual selection of delivery cities from a predefined list
-- 🐜 Ant Colony Optimization (ACO) for route minimization
-- 📍 Route visualization using Folium maps
-- 📊 Comparison of optimized vs unoptimized paths
-- 🖥️ Built with Streamlit for a simple and interactive UI
+- Manual selection of delivery cities from a predefined list
+- Ant Colony Optimization (ACO) for route minimization
+- Route visualization using Folium maps
+- Comparison of optimized vs unoptimized paths
+- Built with Streamlit for a simple and interactive UI
 
 
 <img width="447" alt="image" src="https://github.com/user-attachments/assets/4dd72057-e094-46d4-91f5-6686fde11e90" />
@@ -27,7 +27,7 @@ A Python-based web application for optimizing delivery routes using the Ant Colo
 5. Geopy (for distances between coordinates)
 
 
-🤝 Contributing
+🤝 Contribution
 Contributions are welcome!
 If you'd like to improve this project:
 - Fork the repo
