@@ -16,12 +16,14 @@ A Python-based web application for optimizing delivery routes using the Ant Colo
 <img width="445" alt="image" src="https://github.com/user-attachments/assets/67b2a3af-0456-42bf-a365-769ad20037bd" />
 
 
-🛠️ Technologies Used
+
+🛠️ **Technologies Used**
 1. Python 3
 2. Streamlit
 3. Folium
 4. Ant Colony Optimization (ACO)
 5. Geopy (for distances between coordinates)
+
 
 🤝 **Contributing**
 Contributions are welcome!
@@ -30,3 +32,6 @@ If you'd like to improve this project:
 - Create a new branch
 - Make your changes
 - Open a pull request 🚀
+
+
+All contributions that enhance functionality, performance, or user experience are greatly appreciated.
