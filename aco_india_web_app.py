@@ -4,6 +4,7 @@ from geopy.distance import geodesic
 from folium.plugins import MarkerCluster
 import random
 
+
 # -----------------------------
 # City coordinates dictionary
 # -----------------------------
@@ -202,12 +203,14 @@ else:
             color="red", weight=2.5, opacity=0.6
         ).add_to(m)
 
+
     # Optimized path in BLUE
     for i in range(len(optimized_path) - 1):
         folium.PolyLine(
             [cities[optimized_path[i]], cities[optimized_path[i + 1]]],
             color="blue", weight=3, opacity=0.8
         ).add_to(m)
+
 
     st.subheader("🗺️ Route Visualization (Red = Unoptimized, Blue = Optimized)")
     st.components.v1.html(m._repr_html_(), height=600, scrolling=True)
