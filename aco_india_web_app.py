@@ -5,6 +5,11 @@ from folium.plugins import MarkerCluster
 import random
 
 
+
+
+
+
+
 # -----------------------------
 # City coordinates dictionary
 # -----------------------------
