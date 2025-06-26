@@ -80,10 +80,10 @@ All contributions that enhance functionality, performance, or user experience ar
 ## 📬 Contact
 
 **Tanish Kumar**  
-GitHub: [@TANiSH-17](https://github.com/TANiSH-17)  
-Email: tanishkskr@gmail.com
+GitHub: [@Ashtam01](https://github.com/Ashtam01)  
+Email: ashtam.pati.ug23@nsut.ac.in
 
 ---
 
-**Developed and maintained by Tanish Kumar.**  
+**Developed and maintained by Ashtam Pati Tiwari.**  
 If you found this project helpful, feel free to ⭐ the repository and share your thoughts!
